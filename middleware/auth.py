@@ -1,6 +1,6 @@
 from functools import wraps
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, ConversationHandler
 
 from config import ALLOWED_USERS
 
@@ -17,7 +17,7 @@ def whitelist_only(func):
                 "Sorry, you're not authorized to use this bot.\n"
                 "Contact the administrator to get access."
             )
-            return None
+            return ConversationHandler.END
 
         return await func(update, context, *args, **kwargs)
 
