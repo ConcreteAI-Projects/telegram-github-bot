@@ -23,13 +23,27 @@ class GitHubService:
         "future": "0e8a16",  # Green
     }
 
+    # Type label colors
+    TYPE_COLORS = {
+        "feature-new": "a2eeef",   # Light blue
+        "feature-improved": "7057ff",  # Purple
+        "task": "0075ca",          # Blue
+    }
+
+    # Status label colors
+    STATUS_COLORS = {
+        "raw-idea": "f9d0c4",      # Light pink
+        "need-design": "fef2c0",   # Light yellow
+        "todo": "c2e0c6",          # Light green
+    }
+
     def __init__(self):
         self.github = Github(GITHUB_TOKEN)
         self.repo = self.github.get_repo(GITHUB_REPO)
         self._ensure_labels_exist()
 
     def _ensure_labels_exist(self):
-        """Create impact and urgency labels if they don't exist."""
+        """Create impact, urgency, type, and status labels if they don't exist."""
         existing_labels = {label.name for label in self.repo.get_labels()}
 
         labels_to_create = [
@@ -42,8 +56,13 @@ class GitHubService:
             ("urgency: soon", self.URGENCY_COLORS["soon"], "Needed soon"),
             ("urgency: future", self.URGENCY_COLORS["future"], "Future enhancement"),
             # Type labels
-            ("feature", "a2eeef", "New feature request"),
-            ("bug", "d73a4a", "Bug report"),
+            ("type: feature-new", self.TYPE_COLORS["feature-new"], "New feature"),
+            ("type: feature-improved", self.TYPE_COLORS["feature-improved"], "Improved feature"),
+            ("type: task", self.TYPE_COLORS["task"], "Task"),
+            # Status labels
+            ("status: raw-idea", self.STATUS_COLORS["raw-idea"], "Raw idea - needs refinement"),
+            ("status: need-design", self.STATUS_COLORS["need-design"], "Needs design work"),
+            ("status: todo", self.STATUS_COLORS["todo"], "Ready to work on"),
         ]
 
         for name, color, description in labels_to_create:
@@ -59,7 +78,8 @@ class GitHubService:
         body: str,
         impact: str,
         urgency: str,
-        issue_type: str = "feature",
+        issue_type: str = "feature-new",
+        status: str = "todo",
         image_data: Optional[bytes] = None,
     ) -> dict:
         """
@@ -70,14 +90,20 @@ class GitHubService:
             body: Issue description/body
             impact: Business impact level (high, mid, low)
             urgency: Urgency level (asap, soon, future)
-            issue_type: Type of issue (feature or bug)
+            issue_type: Type of issue (bug, feature-new, feature-improved, task)
+            status: Issue status (raw-idea, need-design, todo)
             image_data: Optional screenshot bytes
 
         Returns:
             dict with issue number and URL
         """
         # Build labels
-        labels = [f"impact: {impact}", f"urgency: {urgency}", issue_type]
+        labels = [
+            f"impact: {impact}",
+            f"urgency: {urgency}",
+            f"type: {issue_type}",
+            f"status: {status}",
+        ]
 
         # Handle image upload if provided
         if image_data:
